@@ -75,11 +75,12 @@ def mine_block(): # Adding our open transactions into a new block
         'recipient' : owner, 
         'amount': MINING_REWARD
     }
-    open_transactions.append(reward_transaction)
+    copied_transactions = open_transactions[:] # Added copied transactions in that case that our new block failed to add to our block chain. A reward should not be given when if the append block has failed. 
+    copied_transactions.append(reward_transaction)
     new_block = {
         'previous_hash': hashed_block, 
         'index': len(blockchain), 
-        'transactions': open_transactions
+        'transactions': copied_transactions
         } # Our way of knowing linking our new block to the previous(i.e )
     blockchain.append(new_block)
 
@@ -93,6 +94,8 @@ def verify_chain(): # If the first block of the new blockchain does not equal th
             return False
     return True #Compares the previous block to the previous hash
 
+def verify_transactions():
+    return all([verify_transaction(tx) for tx in open_transactions])
 
 def print_func():
     for block in blockchain:
@@ -107,6 +110,7 @@ while waiting_for_input:
     print('2: Mine a new block')
     print('3: Output the blockchain blocks')
     print('4: Output participants')
+    print('5: Check Transaction Validity')
     print('q: To quit the program')
     print('h: Manipulate the blockchain')
     user_input = get_user_choice()
@@ -128,6 +132,11 @@ while waiting_for_input:
         print_func()
     elif(user_input == '4'):
         print(participants)
+    elif(user_input == '5'):
+        if verify_transactions():
+            print('All transactions are valid! ')
+        else:
+            print('There are invalid transactions! ')
     elif (user_input == 'h'):
         if len(blockchain) >= 1:
             blockchain[0] = {
