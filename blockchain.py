@@ -1,3 +1,4 @@
+import functools
 MINING_REWARD = 10
 genesis_block = {
     'previous hash' : '',
@@ -14,17 +15,14 @@ def hash_block(block):
 
 def balance(participant):
     tx_sender = [[tx['amount']for tx in block['transactions'] if tx['sender'] == participant] for block in blockchain]
-    amount_sent = 0
     open_tx_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant] 
     tx_sender.append(open_tx_sender)
-    for tx in tx_sender:
-        if len(tx) > 0:
-            amount_sent += tx[0]
-    tx_recipient = [[tx['amount']for tx in block['transactions'] if tx['recipient'] == participant] for block in blockchain]
+    amount_sent = 0
+    amount_sent = functools.reduce(lambda tx_sum, tx_amt: tx_sum + tx_amt[0] if len(tx_amt) > 0 else 0, tx_sender, 0) # Returns the total amount of coins sent
     amount_received = 0
-    for tx in tx_recipient:
-        if len(tx) > 0:
-            amount_received += tx[0]
+    tx_recipient = [[tx['amount']for tx in block['transactions'] if tx['recipient'] == participant] for block in blockchain]
+    amount_received = functools.reduce(lambda tx_sum, tx_amt: tx_sum + tx_amt[0] if len(tx_amt) > 0 else 0, tx_recipient, 0) # Returns the amount of coins received
+
     return amount_received - amount_sent
 
 def get_transcation_value():
@@ -154,7 +152,7 @@ while waiting_for_input:
         print_func()
         print('Invalid blockchain!')
         break
-    print(balance('Max'))
+    print('Balance of {}: {:6.2f} '.format('Max', balance('Max')))
         
 print('Done')
 
