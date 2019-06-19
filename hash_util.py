@@ -1,5 +1,6 @@
 import json
 import hashlib as hl
+from transaction import Transaction
 
 def hash_string_256(string): # Created a utility function 
     return hl.sha256(string).hexdigest()
@@ -21,5 +22,8 @@ def hash_block(block):
     Solved an issue with the dictionary in that if something in memory changes, the hash generated from the 
     dictionary block can actually change since a dictionary is an unordered data structure. 
     Sorting the keys ensures that this issue doesn't occur    
-     """               
-    return hash_string_256((json.dumps(block, sort_keys=True).encode()))
+     """      
+    hashable_block = block.__dict__.copy() # We have to call the copy function because each time we call dict, it will override the previous hashed blocks. 
+     # Each time we want to create a new hash each time we create  a new block         
+    hashable_block['transactions'] = [tx.to_ordered_dict() for tx in hashable_block['transactions']]
+    return hash_string_256((json.dumps(hashable_block, sort_keys=True).encode()))

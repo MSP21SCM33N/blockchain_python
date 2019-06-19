@@ -1,23 +1,19 @@
-class Car:
+from vehicle import Vehicle
+class Car(Vehicle): # The class we want to inherit from
+
     # top_speed = 100 # Class instance
     # warnings = []
-
-    def __init__(self, starting_top_speed=100): # In here was can define an instance attribute Automatically passes the self argument
-        self.top_speed = starting_top_speed
-        self.warnings = []
-
-    def __repr__(self):
-        print('Printing...')
-        return 'Top speed: {}, Warnings: {}.'.format(self.top_speed, self.warnings)
-
-    def drive(self): # The self keyword gives access to all the methods and attributes in the class
-        print('I am driving but certainly not faster than {}'.format(self.top_speed)) #self. gives access to functions and attributes in a class
-        print('Warnings: {}'.format(self.warnings))
+    def brag(self):
+        print('Look how cool my car is! ')
 
 car_1 = Car() # Calls the constructor which constructs the instance of the object
-car_1.drive()
+car_1.drive() # == car.drive(car_1)
 
-car_1.warnings.append('Cool')
+car_1.add_warning('New Warning')
+#car_1.__warnings.append([])
+print(car_1)
+print(car_1.get_warnings())
+
 car_2 = Car(200)  
 print(car_2)  
 car_2.drive()
