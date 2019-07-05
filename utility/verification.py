@@ -1,4 +1,5 @@
-from hash_util import hash_string_256, hash_block
+from utility.hash_util import hash_string_256, hash_block
+from wallet import Wallet
 
 class Verification:
     @staticmethod # Made verify_proof a static method since we're only dependent on the arguments given
@@ -21,10 +22,13 @@ class Verification:
         return True #Compares the previous block to the previous hash
 
     @staticmethod
-    def verify_transaction(transaction, balance):
-        sender_balance = balance()
-        return sender_balance >= transaction.amount
+    def verify_transaction(transaction, balance, checkfunds =True):
+        if checkfunds:
+            sender_balance = balance()
+            return sender_balance >= transaction.amount and Wallet.verify_transaction(transaction)
+        else:
+            return Wallet.verify_transaction(transaction)
 
     @classmethod
     def verify_transactions(cls, open_transactions, balance):
-        return all([cls.verify_transaction(tx, balance) for tx in open_transactions])
+        return all([cls.verify_transaction(tx, balance, False) for tx in open_transactions])

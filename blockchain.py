@@ -2,12 +2,15 @@ import functools
 import hashlib as hl
 import json
 from collections import OrderedDict#Used to ensure that the transactions remain ordered
-from hash_util import hash_block
+from utility.hash_util import hash_block
+from utility.verification import Verification
 from block import Block
 from transaction import Transaction
-from verification import Verification
+from wallet import Wallet
+
 
 MINING_REWARD = 10
+
 
 class Blockchain:
     def __init__(self, hosting_node_id):
@@ -38,7 +41,7 @@ class Blockchain:
                 blockchain = json.loads(file_content[0][:-1])
                 updated_blockchain = []
                 for block in blockchain:
-                    converted_tx = [Transaction(tx['sender'], tx['recipient'], tx['amount']) for tx in block['transactions']]
+                    converted_tx = [Transaction(tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
                     updated_block = Block(block['index'], block['previous_hash'], converted_tx, block['proof'], block['timestamp'])
                     updated_blockchain.append(updated_block)
 
@@ -46,7 +49,7 @@ class Blockchain:
                 open_transactions = json.loads(file_content[1])
                 updated_txs = []
                 for tx in open_transactions: # To load open transactions as ordered dictionaries
-                    updated_tx =  Transaction(tx['sender'], tx['recipient'], tx['amount'])
+                    updated_tx =  Transaction(tx['sender'], tx['recipient'], tx['signature'],tx['amount'])
                     updated_txs.append(updated_tx)
                 self.__open_transactions = updated_txs 
         except (IOError, IndexError): 
@@ -106,7 +109,7 @@ class Blockchain:
         return self.__chain[-1]
         
 
-    def add_transaction(self, recipient, sender,amount=1.0):
+    def add_transaction(self, recipient, sender, signature, amount=1.0):
         """
             Arguments:
                 :sender: The sender of the coins
@@ -118,17 +121,20 @@ class Blockchain:
             'recipient': recipient, 
             'amount': amount
         } """ # Initializing a dictionary
-        transaction = Transaction(sender, recipient, amount)
-        
+        if self.hosting_node_id == None: #Public key is stored in the hosting node
+            return False
+        transaction = Transaction(sender, recipient, signature, amount)
+    
         if Verification.verify_transaction(transaction, self.balance):
             self.__open_transactions.append(transaction)
             self.save_data()
             return True
         return False
-
     #add_transaction (last_transc = get_last_item(), trans_amount = 1.0) keyword arguments
 
     def mine_block(self): # Adding our open transactions into a new block
+        if self.hosting_node_id == None: #Public key is stored in the hosting node
+            return False
         last_block = self.__chain[-1]
         hashed_block = hash_block(last_block) # Did a one line for loop that returns the previous block
         proof = self.proof_of_work()
@@ -137,8 +143,12 @@ class Blockchain:
             'recipient' : owner, 
             'amount': MINING_REWARD
         } """
-        reward_transaction = Transaction('MINING', self.hosting_node_id, MINING_REWARD)
-        copied_transactions = self.__open_transactions[:] # Added copied transactions in that case that our new block failed to add to our block chain. A reward should not be given when if the append block has failed. 
+        reward_transaction = Transaction('MINING', self.hosting_node_id, '', MINING_REWARD)
+        copied_transactions = self.__open_transactions[:]     # Added copied transactions in that case that our new block failed to add to our block chain. A reward should not be given when if the append block has failed. 
+        for tx in copied_transactions:
+            if not Wallet.verify_transaction(tx):
+                return False
+        
         copied_transactions.append(reward_transaction)
         new_block = Block(len(self.__chain), hashed_block, copied_transactions, proof) #new block object
             # Our way of knowing linking our new block to the previous(i.e )
