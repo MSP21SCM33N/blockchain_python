@@ -86,6 +86,8 @@ class Blockchain:
         
                                             
     def balance(self):
+        if self.hosting_node_id == None:
+            return None
         participant = self.hosting_node_id
         tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant] for block in self.__chain]
         open_tx_sender = [tx.amount for tx in self.__open_transactions if tx.sender == participant] 
@@ -134,7 +136,7 @@ class Blockchain:
 
     def mine_block(self): # Adding our open transactions into a new block
         if self.hosting_node_id == None: #Public key is stored in the hosting node
-            return False
+            return None
         last_block = self.__chain[-1]
         hashed_block = hash_block(last_block) # Did a one line for loop that returns the previous block
         proof = self.proof_of_work()
@@ -147,7 +149,7 @@ class Blockchain:
         copied_transactions = self.__open_transactions[:]     # Added copied transactions in that case that our new block failed to add to our block chain. A reward should not be given when if the append block has failed. 
         for tx in copied_transactions:
             if not Wallet.verify_transaction(tx):
-                return False
+                return None
         
         copied_transactions.append(reward_transaction)
         new_block = Block(len(self.__chain), hashed_block, copied_transactions, proof) #new block object
@@ -155,7 +157,7 @@ class Blockchain:
         self.__chain.append(new_block)
         self.__open_transactions = []
         self.save_data()
-        return True
+        return new_block
 
 
 
