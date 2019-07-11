@@ -5,9 +5,10 @@ import Crypto.Random
 import binascii #Converts binary to ascii
 
 class Wallet:
-    def __init__(self): # The reason we set the keys in the constructor to None is because each time we may not want to set new keys
+    def __init__(self,node_id): # The reason we set the keys in the constructor to None is because each time we may not want to set new keys
         self.private_key = None
         self.public_key = None
+        self.node_id = node_id
 
     def create_keys(self):
         private_key, public_key = self.generate_keys() #Unpacks the tuple from generate keys
@@ -18,7 +19,7 @@ class Wallet:
     def save_keys(self):
         if self.public_key != None and self.private_key != None:
             try:
-                with open('wallet.txt', mode='w') as f:
+                with open('wallet-{}.txt'.format(self.node_id), mode='w') as f:
                     f.write(self.public_key)
                     f.write('\n')
                     f.write(self.private_key)
@@ -29,7 +30,7 @@ class Wallet:
 
     def load_keys(self): #Loads keys already existing
         try:
-            with open('wallet.txt', mode='r') as f:
+            with open('wallet-{}.txt'.format(self.node_id), mode='r') as f:
                 keys = f.readlines() #List of keys from the file
                 public_key = keys[0][:-1]
                 private_key = keys[1]
